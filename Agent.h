@@ -125,9 +125,9 @@ struct Agent {
 		nodes[*newNode] = newNode;
 
 		EdgeGene newEdge;
+		newEdge.weight = 1.0;
 		newEdge.inovation = GlobalParams::edgeInovationCounter++;
 		newEdge.inNode = e.inNode;
-		newEdge.weight = 1.0;
 		newEdge.outNode = newNode;
 
 		e.inNode = newNode;

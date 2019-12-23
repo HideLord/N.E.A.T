@@ -39,15 +39,19 @@ public:
 
 		return outputs;
 	}
+
 	static double sigmoid(double x) {
 		return 1.0 / (1 + exp(-x));
 	}
+
 	static double relu(double x) {
 		return std::max(0.0, x);
 	}
+
 	static double leakyRely(double x) {
 		return (x > 0 ? x : x*0.01);
 	}
+
 	static double leakyRely(double x, double alpha) {
 		return (x > 0 ? x : x * alpha);
 	}
