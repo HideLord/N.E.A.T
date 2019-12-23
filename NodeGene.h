@@ -9,12 +9,14 @@ enum class NodeType {
 struct NodeGene {
 	int inovation;
 	NodeType typ;
-	double storage;
+	double storage; // The storage for the current step
+	double preStorage; // The storage for the previous step
 
 	double x, y, radius; // for drawing the neural net
 
 	NodeGene(int inovation, NodeType typ) : typ(typ), inovation(inovation) {
 		this->storage = 0.0;
+		this->preStorage = 0.0;
 		x = 0.0;
 		y = 0.0;
 		radius = 0.0;
@@ -23,6 +25,7 @@ struct NodeGene {
 	NodeGene(int inovation, NodeType typ, double x, double y, double radius)
 		: typ(typ), inovation(inovation), x(x), y(y), radius(radius) {
 		this->storage = 0.0;
+		this->preStorage = 0.0;
 	}
 
 	bool operator==(const NodeGene& node)const {

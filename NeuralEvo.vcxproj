@@ -155,6 +155,7 @@
     <ClInclude Include="GlobalParams.h" />
     <ClInclude Include="Graph.h" />
     <ClInclude Include="Neat.h" />
+    <ClInclude Include="NeuralNetRunner.h" />
     <ClInclude Include="NodeGene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

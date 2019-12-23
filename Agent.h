@@ -59,6 +59,7 @@ struct Agent {
 
 			case NodeType::OUTPUT:
 				possibleOutNodes.push_back(ptr.second);
+				possibleInNodes.push_back(ptr.second);
 				break;
 
 			case NodeType::HIDDEN:

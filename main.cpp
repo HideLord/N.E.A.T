@@ -1,8 +1,6 @@
-#include "GlobalFunctions.h"
 #include "Graph.h"
-using namespace std;
+
 int main() {
-	Graph G(3, 2, 10, 400, 400);
+	Graph G(3, 2, 10, 800, 800);
 	G.graph();
-	return 0;
 }

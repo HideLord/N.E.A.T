@@ -5,6 +5,8 @@
 #include "Neat.h"
 #include <iostream>
 #include "Agent.h"
+#include <string>
+#include "NeuralNetRunner.h"
 class Graph{
 	int width, height;
 	void drawAgent() {
@@ -22,9 +24,16 @@ class Graph{
 			slSetForeColor(1, 1, 1, 0.7);
 			slCircleFill(n.second->x, n.second->y, n.second->radius, 50);
 		}
+		slSetForeColor(1, 1, 1, 1);
+		slSetFontSize(12);
+		for (auto n : A.nodes) {
+			slText(n.second->x, n.second->y+n.second->radius, std::to_string(n.second->storage).c_str());
+		}
 	}
 	void runApp() {
 		slWindow(width, height, "Neural net visualization", false);
+		slSetFont(slLoadFont("ttf/whitrabt.ttf"), 24);
+		slSetTextAlign(SL_ALIGN_CENTER);
 
 		std::thread listener(&Graph::listen, this);
 
@@ -60,6 +69,12 @@ class Graph{
 			//	while (slGetKey(SL_KEY_ENTER));
 				std::cout << "mutate" << std::endl;
 				A.mutate(neat.allEdges);
+			}
+			if (slGetKey(SL_KEY_TAB)) {
+				while (slGetKey(SL_KEY_TAB));
+				std::cout << "running" << std::endl;
+				auto outputs = NeuralNetRunner::run(A, std::vector<double>(neat.inputSize,1),neat.inputSize,neat.outputSize);
+				for (auto o : outputs)std::cout << o << std::endl;
 			}
 		}
 	}
