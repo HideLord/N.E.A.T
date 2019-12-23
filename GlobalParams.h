@@ -11,6 +11,7 @@ public:
 	static int		  nodeInovationCounter;
 	static int		  edgeInovationCounter;
 	static const int  MAXNODES;
+	static const int  MAX_GENERATIONS_WITHOUT_IMPROVEMENT;
 
 	static const double C1, C2, C3;
 	static const double WEIGHT_RANDOM_STRENGTH;

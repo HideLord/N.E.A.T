@@ -47,5 +47,8 @@
     <ClInclude Include="NeuralNetRunner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Species.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -27,3 +27,12 @@ template<class T> inline T& getRandomElement(std::vector<T>& V) {
 	return V[rand() % static_cast<int>(V.size())];
 }
 
+//Fisher–Yates shuffle
+template<class T> inline void shuffle(std::vector<T>& V) {
+	int size = V.size();
+	while(size) {
+		swap(V[rand() % size],V[size-1]);
+		size -= 1;
+	}
+}
+

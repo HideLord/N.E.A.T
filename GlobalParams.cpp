@@ -3,6 +3,7 @@
 int GlobalParams::nodeInovationCounter = 0;
 int GlobalParams::edgeInovationCounter = 0;
 const int GlobalParams::MAXNODES = 1000000;
+const int GlobalParams::MAX_GENERATIONS_WITHOUT_IMPROVEMENT = 10;
 
 const double  GlobalParams::C1 = 1.0;
 const double  GlobalParams::C2 = 1.0;

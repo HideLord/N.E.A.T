@@ -157,6 +157,7 @@
     <ClInclude Include="Neat.h" />
     <ClInclude Include="NeuralNetRunner.h" />
     <ClInclude Include="NodeGene.h" />
+    <ClInclude Include="Species.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
