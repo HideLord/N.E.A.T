@@ -3,20 +3,21 @@
 #include <numeric>
 
 class Species {
+public:
 	Species() {
 		generationsWithoutImprovement = 0;
 	}
 
-	std::vector<Agent> agents;
+	std::vector< std::shared_ptr< Agent > > agents;
 	
 	int generationsWithoutImprovement; // generations since last improvement
 
 	// Gets the best agents at the front, the worst at the back
 	void sort() {
-		std::sort(agents.begin(), agents.end(), [](Agent& A, Agent& B) {
-			if (A.fitness == B.fitness)
-				return A.nodes.size() < B.nodes.size();
-			return A.fitness > B.fitness;
+		std::sort(agents.begin(), agents.end(), [](std::shared_ptr< Agent >& A, std::shared_ptr< Agent >& B) {
+			if (A->fitness == B->fitness)
+				return A->nodes.size() < B->nodes.size();
+			return A->fitness > B->fitness;
 		});
 	}
 
@@ -32,7 +33,7 @@ class Species {
 		//select the best one
 		int bestIndex = indice[0];
 		for (int i = 1; i < n; i++)
-			if (agents[bestIndex].fitness < agents[indice[i]].fitness)
+			if (agents[bestIndex]->fitness < agents[indice[i]]->fitness)
 				bestIndex = indice[i];
 		return bestIndex;
 	}
@@ -48,11 +49,11 @@ class Species {
 	}
 
 	Agent getNewAgent(int parentIndexA, int parentIndexB) {
-		return Agent::crossover(agents[parentIndexA], agents[parentIndexB]);
+		return Agent::crossover(*agents[parentIndexA], *agents[parentIndexB]);
 	}
 
 	bool isStagnant() {
-		return generationsWithoutImprovement > GlobalParams::MAX_GENERATIONS_WITHOUT_IMPROVEMENT;
+		return generationsWithoutImprovement > GlobalParams::DROPOFF_AGE;
 	}
 
 	void trim(int leave) {
@@ -64,19 +65,19 @@ class Species {
 		agents.clear();
 	}
 
-	void add(Agent& agent) {
+	void add(std::shared_ptr<Agent> agent) {
 		agents.push_back(agent);
 		sort();
 	}
 
 	void shareFitness() {
 		for (auto& agent : agents) {
-			agent.fitness /= agents.size();
+			agent->fitness /= agents.size();
 		}
 	}
 
-	double distance(Agent& pending) {
-		return agents[0].distance(pending);
+	double distance(std::shared_ptr<Agent> pending) {
+		return agents[0]->distance(*pending);
 	}
 
 };

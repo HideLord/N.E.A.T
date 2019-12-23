@@ -17,10 +17,13 @@ public:
 			if (n.second->typ == NodeType::INPUT) {
 				n.second->preStorage = n.second->storage = inputs[n.second->inovation];
 			}
+			if (n.second->typ == NodeType::BIAS) {
+				n.second->preStorage = n.second->storage = 1.0;
+			}
 		}
 
 		for (auto& n : A.nodes) {
-			if (n.second->typ != NodeType::INPUT) {
+			if (n.second->typ != NodeType::INPUT && n.second->typ != NodeType::BIAS) {
 				n.second->preStorage = sigmoid(n.second->storage); // Activate the previous storage
 				n.second->storage = 0.0; // current storage is reset
 			}

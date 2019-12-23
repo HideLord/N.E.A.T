@@ -29,7 +29,10 @@ class Graph{
 			slLine(e.inNode->x, e.inNode->y, e.outNode->x, e.outNode->y);
 		}
 		for (auto &n : A.nodes) {
-			slSetForeColor(1, 1, 1, 0.7);
+			if (n.second->typ == NodeType::BIAS)slSetForeColor(1, 1, 1, 0.7);
+			if (n.second->typ == NodeType::INPUT)slSetForeColor(0, 1, 0, 0.7);
+			if (n.second->typ == NodeType::HIDDEN)slSetForeColor(0, 0, 1, 0.7);
+			if (n.second->typ == NodeType::OUTPUT)slSetForeColor(1, 0, 1, 1);
 			slCircleFill(n.second->x, n.second->y, n.second->radius, 50);
 		}
 		slSetForeColor(1, 1, 1, 1);
@@ -108,7 +111,7 @@ public:
 		neat.drawingWindowBottomRight_y = height;
 	}
 	void graph() {
-		A = neat.getStartingAgent();
+		A = neat.getStartingAgentConnected();
 		std::thread app(&Graph::runApp,this);
 		app.join();
 	}

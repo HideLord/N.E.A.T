@@ -189,7 +189,7 @@ struct Agent {
 		excess += static_cast<double>(B.edges.size()) - static_cast<double>(indB);
 
 		double N = static_cast<double>(std::max(A.edges.size(), B.edges.size()));
-		return GlobalParams::C1 * disjoint / N + GlobalParams::C2 * excess / N + GlobalParams::C3 * weight_diff;
+		return GlobalParams::DISJOIN_COEFFICIENT * disjoint / N + GlobalParams::EXCESS_COEFFICIENT * excess / N + GlobalParams::WEIGHT_DIFF_COEFFICIENT * weight_diff;
 	}
 
 	static Agent crossover(Agent& A, Agent& B) { // A is the better Agent
