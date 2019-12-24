@@ -44,7 +44,7 @@ class Graph{
 	}
 	void runApp() {
 		slWindow(width, height, "Neural net visualization", false);
-		slSetFont(slLoadFont("ttf/whitrabt.ttf"), 24);
+		slSetFont(slLoadFont("ttf/Arial.ttf"), 24);
 		slSetTextAlign(SL_ALIGN_CENTER);
 
 		std::thread listener(&Graph::listen, this);
@@ -109,9 +109,12 @@ public:
 		neat.drawingWindowTopLeft_y = 0;
 		neat.drawingWindowBottomRight_x = width;
 		neat.drawingWindowBottomRight_y = height;
+		neat.init();
+		neat.epoch(100);
 	}
 	void graph() {
-		A = neat.getStartingAgentConnected();
+		std::cout << neat.allSpecies[0].agents.back()->nodes.size() << std::endl;
+		A = *neat.allSpecies[0].agents.back();
 		std::thread app(&Graph::runApp,this);
 		app.join();
 	}

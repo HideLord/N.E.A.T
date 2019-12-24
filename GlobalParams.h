@@ -25,6 +25,9 @@ public:
 
 	static const double COMPATIBILITY_THRESHOLD;
 	static const double COMPATIBILITY_MODIFIER;
+	static const double MIN_COMPATIBILITY_THRESHOLD;
+	
+	static const double AGE_SIGNIFICANCE;
 private:
 	GlobalParams() {}
 };

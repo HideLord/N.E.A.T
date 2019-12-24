@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "Species.h"
+#include "NeuralNetRunner.h"
 
 class Neat {
 public:
@@ -12,7 +13,6 @@ public:
 	std::unordered_map< std::pair<int, int>, int, pair_hash > allEdges;
 	std::unordered_set< NodeGene, NodeHasher > allNodes;
 
-	std::vector< std::shared_ptr<Agent> > allAgents;
 	std::vector< Species > allSpecies;
 
 	std::shared_ptr<Agent> champion;
@@ -42,32 +42,149 @@ public:
 		GlobalParams::edgeInovationCounter = (inputSize + 1) * outputSize; // every input and bias -> every output
 	}
 
-	void speciate() {
-		for (auto& agent : allAgents) {
-			bool placed = false;
-
-			for(auto& s: allSpecies){
-				if (s.distance(agent) < compatibilityThreshold) {
-					placed = true;
-					s.add(agent);
-					break;
-				}
-			}
-
-			if (placed)continue;
-
-			allSpecies.push_back(Species());
-			allSpecies.back().add(agent);
+	void init() {
+		for (int i = 0; i < popSize; i++) {
+			auto newAgent = std::shared_ptr<Agent>(new Agent(getStartingAgentConnected()));
+			addToSpecies(newAgent);
+			evaluate(newAgent);
 		}
 	}
 
+	void addToSpecies(std::shared_ptr< Agent >& agent) {
+		if (!allSpecies.empty()) {
+			for (auto& s : allSpecies) {
+				if (s.size())
+					if (s.distance(agent) < compatibilityThreshold) {
+						s.add(agent);
+						return;
+					}
+			}
+		}
+
+		allSpecies.push_back(Species());
+		allSpecies.back().add(agent);
+	}
+
+	void evaluate(std::shared_ptr< Agent > agent) {
+		for (int i = 0; i < 20; i++) // let the network stabalize
+			NeuralNetRunner::run(*agent, { 0,0 }, inputSize, outputSize);
+		auto outputs1 = NeuralNetRunner::run(*agent, { 0,0 }, inputSize, outputSize);
+		auto outputs2 = NeuralNetRunner::run(*agent, { 0,1 }, inputSize, outputSize);
+		auto outputs3 = NeuralNetRunner::run(*agent, { 1,0 }, inputSize, outputSize);
+		auto outputs4 = NeuralNetRunner::run(*agent, { 1,1 }, inputSize, outputSize);
+
+		agent->fitness = 0.0;
+		agent->fitness -= fabs(outputs1[0] - 0.0);
+		agent->fitness -= fabs(outputs2[0] - 1.0);
+		agent->fitness -= fabs(outputs3[0] - 1.0);
+		agent->fitness -= fabs(outputs4[0] - 0.0);
+		agent->fitness = -1.0 / agent->fitness;
+	}
+
+	std::shared_ptr<Agent> getChampion() {
+		using namespace std;
+		std::shared_ptr<Agent> champ = allSpecies[0].agents[0];
+		for (auto& s : allSpecies) {
+			if (champ->fitness < s.agents[0]->fitness)champ = s.agents[0];
+		}
+		return champ;
+	}
+
+	void rankGlobaly() {
+		std::vector< std::shared_ptr<Agent> > rank;
+		for (auto& s : allSpecies) rank.insert(rank.end(), s.agents.begin(), s.agents.end());
+		std::sort(rank.begin(), rank.end(), [](const std::shared_ptr< Agent > & A, const std::shared_ptr< Agent > & B) {
+			if (A->fitness == B->fitness)
+				return A->nodes.size() < B->nodes.size();
+			return A->fitness > B->fitness;
+		});
+		for (int i = 0; i < static_cast<int>(rank.size()); i++) {
+			rank[i]->globalRank = i;
+		}
+	}
+
+	void removeStaleSpecies() {
+		std::vector<Species> survivors;
+		for (auto& s : allSpecies) {
+			if (s.agents[0]->fitness > s.prevBestFitness) {
+				s.generationsWithoutImprovement = 0;
+				s.prevBestFitness = s.agents[0]->fitness;
+			}
+			else {
+				s.generationsWithoutImprovement++;
+			}
+			if (!s.isStagnant() || s.agents[0]->globalRank == 0)survivors.push_back(s);
+		}
+		allSpecies = survivors;
+	}
+
+	double totalAverageFitness() {
+		double sum = 0;
+		for (auto& s : allSpecies)
+			sum += s.averageFitness;
+		return sum;
+	}
+
+	void removeWeakSpecies() {
+		std::vector<Species> survivors;
+
+		double sum = totalAverageFitness();
+
+		for (auto& s : allSpecies) {
+			int breed = floor(s.averageFitness / sum * popSize);	
+			if (breed >= 1) survivors.push_back(s);
+		}
+
+		allSpecies = survivors;
+	}
+
 	void runGeneration(int generation) {
-		
+		for (auto& s : allSpecies) {
+			s.sort();
+			s.trim(ceil(s.size() / 2.0));
+		}
+		rankGlobaly();
+		removeStaleSpecies();
+		rankGlobaly();
+		for (auto& s : allSpecies) 
+			s.averageFitness = s.getAverageFitness();
+		removeWeakSpecies();
+		double sum = totalAverageFitness();
+		std::vector< std::shared_ptr<Agent> > children;
+		for (auto& s : allSpecies) {
+			int breed = floor(s.averageFitness / sum * popSize) - 1;
+			for (int i = 0; i < breed; i++) {
+				children.push_back(s.getSpeciesChild());
+				children.back()->mutate(allEdges);
+				evaluate(children.back());
+			}
+		}
+		for (auto& s : allSpecies) 
+			s.trim(1);
+		while (children.size() + allSpecies.size() < popSize) {
+			Species& s = getRandomElement(allSpecies);
+			children.push_back(s.getSpeciesChild());
+			children.back()->mutate(allEdges);
+			evaluate(children.back());
+		}
+
+		for (auto& c : children) {
+			addToSpecies(c);
+		}
+
+		std::cout << "num species: " << allSpecies.size() << std::endl;
+	}
+
+	void update(int generation) {
+		compatibilityThreshold -= GlobalParams::COMPATIBILITY_MODIFIER;
+		compatibilityThreshold = std::max(compatibilityThreshold, GlobalParams::MIN_COMPATIBILITY_THRESHOLD);
 	}
 
 	void epoch(int numGenerations) {
 		for (int i = 0; i < numGenerations; i++) {
+			update(i);
 			runGeneration(i + 1);
+			std::cout << getChampion()->fitness << std::endl;
 		}
 	}
 
