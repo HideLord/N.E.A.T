@@ -1,6 +1,6 @@
 #include "Graph.h"
 
 int main() {
-	Graph G(2, 1, 150, 800, 800);
+	Graph G(1, 1, 50, 800, 800);
 	G.graph();
 }

@@ -30,6 +30,7 @@ public:
 		}
 
 		for (auto & e : A.edges) {
+			if (!e.isEnabled)continue;
 			e.outNode->storage += e.inNode->preStorage * e.weight;
 		}
 

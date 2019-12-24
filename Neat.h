@@ -25,6 +25,9 @@ public:
 	int drawingWindowBottomRight_x, drawingWindowBottomRight_y;
 
 	double compatibilityThreshold;
+	double bestFitness;
+
+	int bestRank = 0;
 
 	Neat(int inSize, int outSize, int popSize) {
 		this->outputSize = outSize;
@@ -38,8 +41,10 @@ public:
 		this->drawingWindowBottomRight_x = 0.0;
 		this->drawingWindowBottomRight_y = 0.0;
 
-		GlobalParams::nodeInovationCounter = inputSize + outputSize + 1; // inputs+outputs+biases
-		GlobalParams::edgeInovationCounter = (inputSize + 1) * outputSize; // every input and bias -> every output
+		bestFitness = 0.0;
+
+		GlobalParams::nodeInovationCounter = inputSize + outputSize + 2; // inputs+outputs+biases
+		GlobalParams::edgeInovationCounter = (inputSize + 1) * outputSize + 1; // every input and bias -> every output
 	}
 
 	void init() {
@@ -68,17 +73,18 @@ public:
 	void evaluate(std::shared_ptr< Agent > agent) {
 		for (int i = 0; i < 20; i++) // let the network stabalize
 			NeuralNetRunner::run(*agent, { 0,0 }, inputSize, outputSize);
-		auto outputs1 = NeuralNetRunner::run(*agent, { 0,0 }, inputSize, outputSize);
-		auto outputs2 = NeuralNetRunner::run(*agent, { 0,1 }, inputSize, outputSize);
-		auto outputs3 = NeuralNetRunner::run(*agent, { 1,0 }, inputSize, outputSize);
-		auto outputs4 = NeuralNetRunner::run(*agent, { 1,1 }, inputSize, outputSize);
-
-		agent->fitness = 0.0;
-		agent->fitness -= fabs(outputs1[0] - 0.0);
-		agent->fitness -= fabs(outputs2[0] - 1.0);
-		agent->fitness -= fabs(outputs3[0] - 1.0);
-		agent->fitness -= fabs(outputs4[0] - 0.0);
+		std::vector<std::pair<std::vector<double>, double>> inputs{ { {0,0},0 },{ {1,0},1 },{ {0,1},1 },{ {1,1},0 } };
+		shuffle(inputs);
+		for (auto input : inputs) {
+			auto outputs = NeuralNetRunner::run(*agent, input.first, inputSize, outputSize);
+			agent->fitness -= fabs(outputs[0] - input.second);
+		}
 		agent->fitness = -1.0 / agent->fitness;
+		
+		if (agent->fitness > bestFitness) {
+			bestFitness = agent->fitness;
+			champion = agent;
+		}
 	}
 
 	std::shared_ptr<Agent> getChampion() {
@@ -99,8 +105,9 @@ public:
 			return A->fitness > B->fitness;
 		});
 		for (int i = 0; i < static_cast<int>(rank.size()); i++) {
-			rank[i]->globalRank = i;
+			rank[i]->globalRank = (rank.size() - i);
 		}
+		bestRank = rank.size();
 	}
 
 	void removeStaleSpecies() {
@@ -113,7 +120,7 @@ public:
 			else {
 				s.generationsWithoutImprovement++;
 			}
-			if (!s.isStagnant() || s.agents[0]->globalRank == 0)survivors.push_back(s);
+			if (!s.isStagnant() || s.agents[0]->globalRank == bestRank)survivors.push_back(s);
 		}
 		allSpecies = survivors;
 	}
@@ -140,6 +147,7 @@ public:
 
 	void runGeneration(int generation) {
 		for (auto& s : allSpecies) {
+			s.speciesAge++;
 			s.sort();
 			s.trim(ceil(s.size() / 2.0));
 		}
@@ -168,9 +176,8 @@ public:
 			evaluate(children.back());
 		}
 
-		for (auto& c : children) {
+		for (auto& c : children) 
 			addToSpecies(c);
-		}
 
 		std::cout << "num species: " << allSpecies.size() << std::endl;
 	}
@@ -184,7 +191,7 @@ public:
 		for (int i = 0; i < numGenerations; i++) {
 			update(i);
 			runGeneration(i + 1);
-			std::cout << getChampion()->fitness << std::endl;
+			std::cout << bestFitness << std::endl;
 		}
 	}
 

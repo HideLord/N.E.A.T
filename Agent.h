@@ -212,12 +212,12 @@ struct Agent {
 				indB++;
 			}
 			else if (A->edges[indA].inovation > B->edges[indB].inovation) {
-				if (A->fitness > B->fitness)
+				if (B->fitness >= A->fitness)
 					child->edges.push_back(B->edges[indB]);  // disjoint from B
 				indB++;
 			}
 			else {
-				if (A->fitness > B->fitness)
+				if (A->fitness >= B->fitness)
 					child->edges.push_back(A->edges[indA]); // disjoint from A
 				indA++;
 			}

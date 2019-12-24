@@ -86,8 +86,9 @@ public:
 		if (size() == 0)return 0.0;
 		double fitness = 0;
 		for (auto& agent : agents) {
-			fitness += agent->fitness;
+			fitness += agent->globalRank;
 		}
+		if(speciesAge < 10)fitness *= GlobalParams::AGE_SIGNIFICANCE;
 		return fitness / static_cast<double>(size());
 	}
 
@@ -101,6 +102,20 @@ public:
 		}
 		int parentA = performTournament(std::max(1,size() / 2));
 		int parentB = performTournament(std::max(1,size() / 2));
+		auto child = getNewAgent(parentA, parentB);
+		return child;
+	}
+
+	std::shared_ptr< Agent > getSpeciesChildRandom() {
+		if (size() == 0) {
+			throw;
+		}
+		if (size() == 1) {
+			auto child = getNewAgent(0, 0);
+			return child;
+		}
+		int parentA = rand() % size();
+		int parentB = rand() % size();
 		auto child = getNewAgent(parentA, parentB);
 		return child;
 	}

@@ -12,6 +12,7 @@ class Graph{
 	int width, height;
 	std::mutex lockAgent;
 	void drawAgent() {
+		A = *neat.champion;
 		lockAgent.lock();
 		for (auto &e : A.edges) {
 			if (e.isEnabled) {
@@ -100,7 +101,10 @@ class Graph{
 			}
 		}
 	}
-
+	void epoch(int gens) {
+		neat.init();
+		neat.epoch(gens);
+	}
 	Neat neat;
 	Agent A;
 public:
@@ -109,14 +113,12 @@ public:
 		neat.drawingWindowTopLeft_y = 0;
 		neat.drawingWindowBottomRight_x = width;
 		neat.drawingWindowBottomRight_y = height;
-		neat.init();
-		neat.epoch(100);
 	}
 	void graph() {
-		std::cout << neat.allSpecies[0].agents.back()->nodes.size() << std::endl;
-		A = *neat.allSpecies[0].agents.back();
+		std::thread T(&Graph::epoch, this, 1000);
 		std::thread app(&Graph::runApp,this);
 		app.join();
+		T.join();
 	}
 
 };
